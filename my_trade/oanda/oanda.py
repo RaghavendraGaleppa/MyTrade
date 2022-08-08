@@ -1,4 +1,5 @@
 import requests
+import json
 
 from urllib.parse import urljoin
 from my_trade.utils.logging_utils import getLogger
@@ -49,8 +50,21 @@ class OandaAPI:
         response = await async_get(url, params=params, headers=headers)
 
         if response is None:
-            oanda_logger.error(f"Error: {response.status_code}")
-            oanda_logger.error(f"{response.text}")
             return None
 
         return response
+
+    @classmethod
+    def get_oanda_api(cls, credentials_file=None, api_token=None, account_id=None, url=None):
+        if credentials_file is not None:
+            with open(credentials_file, "r") as f:
+                # It is a json file
+                credentials = json.load(f)
+                api_token = credentials.get("api_token")
+                account_id = credentials.get("account_id")
+                url = credentials.get("url")
+
+        if api_token is None or account_id is None or url is None:
+            raise Exception("Missing credentials")
+
+        return cls(api_token, account_id, url)
