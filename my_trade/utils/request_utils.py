@@ -24,7 +24,8 @@ async def async_get(url, params=None, headers=None):
         async with session.get(url, params=params, headers=headers) as response:
             # Check if the response is successful
             if response.status != 200:
-                request_utils_logger.error(f"Error: {response.status}")
+                text = await response.text()
+                request_utils_logger.error(f"Error: {response.status} {text}")
                 return None
             return await response.json()
 
@@ -44,6 +45,7 @@ async def async_post(url, json_data=None, headers=None):
         async with session.post(url, json=json_data, headers=headers) as response:
             # Check if the response is successful
             if response.status != 200:
-                request_utils_logger.error(f"Error: {response.status}")
+                text = await response.text()
+                request_utils_logger.error(f"Error: {response.status} {text}")
                 return None
             return await response.json()
