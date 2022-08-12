@@ -14,7 +14,7 @@ oanda = OandaAPI(api_key, account_id, url)
 print(oanda.get_price_data(fx='EUR_USD', granularity='M1', count=1))
 ```
 
-##### Using a credentials_file
+#### 1a. Using a credentials_file
 A credentials file is a json file with the following structure:
 
 ```json
@@ -34,7 +34,7 @@ oanda = OandaAPI.get_oanda_api(credentials_file='credentials.json')
 print(oanda.get_price_data(fx='EUR_USD', granularity='M1', count=1))
 ```
 
-##### Async usage
+#### 1b. Async usage
 
 ```python
 from my_trade.oanda import OandaAPI
