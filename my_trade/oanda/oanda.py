@@ -4,7 +4,7 @@ import pandas as pd
 
 from urllib.parse import urljoin
 from my_trade.utils.logging_utils import getLogger
-from my_trade.utils.request_utils import async_get, async_post
+from my_trade.utils.request_utils import async_get
 
 oanda_logger = getLogger("oanda", logging_level="DEBUG")
 oanda_logger.debug("Oanda logger initialized")
@@ -79,8 +79,6 @@ class OandaAPI:
 
         else:
             raise ValueError(f"Invalid return_type: {return_type}. It must be 'json' or 'dataframe'")
-
-
 
     @classmethod
     def get_oanda_api(cls, credentials_file=None, api_token=None, account_id=None, url=None):
