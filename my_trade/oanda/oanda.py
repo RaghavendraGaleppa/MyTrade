@@ -1,5 +1,6 @@
 import requests
 import json
+import pandas as pd
 
 from urllib.parse import urljoin
 from my_trade.utils.logging_utils import getLogger
@@ -36,7 +37,7 @@ class OandaAPI:
 
         return response.json()
 
-    async def async_get_price_data(self, fx="EUR_USD", granularity="M1", count=10):
+    async def async_get_price_data(self, fx="EUR_USD", granularity="M1", count=10, return_type="json"):
         url = urljoin(self.url, f"/v3/instruments/{fx}/candles")
         oanda_logger.debug(f"url: {url}")
 
@@ -52,7 +53,34 @@ class OandaAPI:
         if response is None:
             return None
 
-        return response
+        if return_type == "json":
+            return response
+
+        elif return_type == "dataframe":
+            candles = []
+            for candle in response['candles']:
+                ohlc_data = {
+                    'date_time': candle['time'],
+                    'open': candle['mid']['o'],
+                    'high': candle['mid']['h'],
+                    'low': candle['mid']['l'],
+                    'close': candle['mid']['c'],
+                    'volume': candle['volume'],
+                    'complete': candle['complete']
+                }
+                candles.append(ohlc_data)
+
+            # Convert to pandas dataframe
+            df = pd.DataFrame(candles)
+            # date_time field is in utc, convert it to DatetimeIndex
+            df['date_time'] = pd.to_datetime(df['date_time'])
+            df.set_index('date_time', inplace=True)
+            return df
+
+        else:
+            raise ValueError(f"Invalid return_type: {return_type}. It must be 'json' or 'dataframe'")
+
+
 
     @classmethod
     def get_oanda_api(cls, credentials_file=None, api_token=None, account_id=None, url=None):
