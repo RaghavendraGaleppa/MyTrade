@@ -17,7 +17,7 @@ class OandaAPI:
         self.account_id = account_id
         self.url = url
 
-    def get_price_data(self, fx="EUR_USD", granularity="M1", count=10):
+    def get_price_data(self, fx="EUR_USD", granularity="M1", count=10, return_type="json"):
         url = urljoin(self.url, f"/v3/instruments/{fx}/candles")
         oanda_logger.debug(f"url: {url}")
 
@@ -35,7 +35,42 @@ class OandaAPI:
             oanda_logger.error(f"{response.text}")
             return None
 
-        return response.json()
+        if return_type == "json":
+            return response.json()
+
+        elif return_type == "dataframe":
+            candles = []
+            for candle in response.json()['candles']:
+                ohlc_data = {
+                    'date_time': candle['time'],
+                    'open': candle['mid']['o'],
+                    'high': candle['mid']['h'],
+                    'low': candle['mid']['l'],
+                    'close': candle['mid']['c'],
+                    'volume': candle['volume'],
+                    'complete': candle['complete']
+                }
+                candles.append(ohlc_data)
+
+            # Convert to pandas dataframe
+            df = pd.DataFrame(candles)
+            # date_time field is in utc, convert it to DatetimeIndex
+            df['date_time'] = pd.to_datetime(df['date_time'])
+            df.set_index('date_time', inplace=True)
+
+            # Convert open, high, low, close to float
+            df['open'] = df['open'].astype(float)
+            df['high'] = df['high'].astype(float)
+            df['low'] = df['low'].astype(float)
+            df['close'] = df['close'].astype(float)
+
+            # convert volume to int
+            df['volume'] = df['volume'].astype(int)
+            return df
+
+        else:
+            raise ValueError(f"Invalid return_type: {return_type}. It must be 'json' or 'dataframe'")
+
 
     async def async_get_price_data(self, fx="EUR_USD", granularity="M1", count=10, return_type="json"):
         url = urljoin(self.url, f"/v3/instruments/{fx}/candles")
@@ -75,6 +110,15 @@ class OandaAPI:
             # date_time field is in utc, convert it to DatetimeIndex
             df['date_time'] = pd.to_datetime(df['date_time'])
             df.set_index('date_time', inplace=True)
+
+            # Convert open, high, low, close to float
+            df['open'] = df['open'].astype(float)
+            df['high'] = df['high'].astype(float)
+            df['low'] = df['low'].astype(float)
+            df['close'] = df['close'].astype(float)
+
+            # convert volume to int
+            df['volume'] = df['volume'].astype(int)
             return df
 
         else:
