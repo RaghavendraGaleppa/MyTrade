@@ -17,14 +17,33 @@ class OandaAPI:
         self.account_id = account_id
         self.url = url
 
-    def get_price_data(self, fx="EUR_USD", granularity="M1", count=10, return_type="json"):
+    def get_price_data(
+            self,
+            fx="EUR_USD",
+            granularity="M1",
+            count=10,
+            return_type="json",
+            start_timestamp: int = None,
+            end_timestamp: int = None
+    ):
         url = urljoin(self.url, f"/v3/instruments/{fx}/candles")
         oanda_logger.debug(f"url: {url}")
 
-        params = {
-            'granularity': granularity,
-            'count': count
-        }
+        if not start_timestamp and not end_timestamp:
+            params = {
+                'granularity': granularity,
+                'count': count
+            }
+
+        elif start_timestamp and end_timestamp:
+            params = {
+                "granularity": granularity,
+                "from": start_timestamp,
+                "end": end_timestamp,
+                "count": count
+            }
+
+
         headers = {
             'Authorization': f'Bearer {self.api_token}'
         }
@@ -52,6 +71,8 @@ class OandaAPI:
                 }
                 candles.append(ohlc_data)
 
+            # Reverse the candles
+            candles = candles[::-1]
             # Convert to pandas dataframe
             df = pd.DataFrame(candles)
             # date_time field is in utc, convert it to DatetimeIndex
